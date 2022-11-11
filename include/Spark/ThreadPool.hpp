@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <functional>
 #include <future>
@@ -11,6 +12,8 @@
 #include <type_traits>
 #include <vector>
 
+namespace sp
+{
 class ThreadPool
 {
 public:
@@ -20,12 +23,12 @@ public:
     ~ThreadPool();
 
 private:
-    std::vector<std::thread> m_workers;
+    std::vector<std::thread>          m_workers;
     std::queue<std::function<void()>> m_tasks;
 
     std::mutex              m_queue_mutex;
     std::condition_variable m_condition;
-    bool                    m_stop;
+    std::atomic<bool>       m_stop;
 };
 
 inline ThreadPool::ThreadPool() : m_stop(false)
@@ -80,3 +83,4 @@ inline ThreadPool::~ThreadPool()
     for (std::thread& worker : m_workers)
         worker.join();
 }
+} // namespace sp
