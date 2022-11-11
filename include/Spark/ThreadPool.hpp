@@ -26,7 +26,7 @@ private:
     std::vector<std::thread>          m_workers;
     std::queue<std::function<void()>> m_tasks;
 
-    std::mutex              m_queue_mutex;
+    std::mutex              m_queueMutex;
     std::condition_variable m_condition;
     std::atomic<bool>       m_stop;
 };
@@ -42,7 +42,7 @@ inline ThreadPool::ThreadPool() : m_stop(false)
                     std::function<void()> task;
 
                     {
-                        std::unique_lock<std::mutex> lock(m_queue_mutex);
+                        std::unique_lock<std::mutex> lock(m_queueMutex);
                         m_condition.wait(lock, [this] { return m_stop || !m_tasks.empty(); });
                         if (m_stop && m_tasks.empty())
                             return;
@@ -65,18 +65,18 @@ auto ThreadPool::addTask(F&& f, Args&&... args) -> std::future<typename std::res
 
     std::future<return_type> res = task->get_future();
     {
-        std::unique_lock<std::mutex> lock(queue_mutex);
+        std::unique_lock<std::mutex> lock(m_queueMutex);
 
-        tasks.emplace([task]() { (*task)(); });
+        m_tasks.emplace([task]() { (*task)(); });
     }
-    condition.notify_one();
+    m_condition.notify_one();
     return res;
 }
 
 inline ThreadPool::~ThreadPool()
 {
     {
-        std::unique_lock<std::mutex> lock(m_queue_mutex);
+        std::unique_lock<std::mutex> lock(m_queueMutex);
         m_stop = true;
     }
     m_condition.notify_all();
