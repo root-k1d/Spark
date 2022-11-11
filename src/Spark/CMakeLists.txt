@@ -3,6 +3,7 @@ set(SRCROOT ${PROJECT_SOURCE_DIR}/src/${PROJECT_NAME})
 
 set(SRC
     ${INCROOT}/ThreadPool.hpp
+    ${SRCROOT}/ThreadPool.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SRC}) 
